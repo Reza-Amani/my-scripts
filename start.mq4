@@ -10,7 +10,7 @@
 #property script_show_inputs
 //--- input parameters
 input int      len=5;
-input int      correlation_thresh=95;
+input double   correlation_thresh=196;
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
 //+------------------------------------------------------------------+
@@ -32,12 +32,35 @@ void OnStart()
    Comment("file ok");
    FileWrite(filehandle,TimeCurrent(),Symbol(), EnumToString(ENUM_TIMEFRAMES(_Period)));
 
-   for(int i=0;i<Bars-len;i++)
+   double corrH,corrL;
+   int i,j,thresh_hit_cnt;
+   int history_size = Bars-len;
+   history_size = 1000;
+/*   for(i=0;i<history_size;i++)
    {
-      double corr = correlation_high(0,i,len);
-      FileWrite(filehandle,High[i],corr);
+      thresh_hit_cnt=0;
+      for(j=0;j<Bars-len;j++)
+      {
+         corrH = correlation_high(j,i,len);
+         corrL = correlation_low(j,i,len);
+         if(corrH+corrL>correlation_thresh)
+            thresh_hit_cnt++;
+      }
+      Comment(i,"/",history_size);
+      FileWrite(filehandle,High[i],thresh_hit_cnt);
    }
-
+*/   i=258;
+   for(j=0;j<Bars-len;j++)
+   {
+      corrH = correlation_high(j,i,len);
+      corrL = correlation_low(j,i,len);
+      if(corrH+corrL>correlation_thresh)
+      {
+         corrH = correlation_high(j-2,i-2,3);
+         corrL = correlation_low(j-2,i-2,3);
+         FileWrite(filehandle,High[i],j,corrH,corrL);
+      }
+   }
 
 
 
