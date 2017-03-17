@@ -10,8 +10,8 @@
 #property script_show_inputs
 //--- input parameters
 input int      len=5;
+input int history=500;
 input double   correlation_thresh=196;
-input int referenced_pattern=3;
 //----macros
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
@@ -22,8 +22,7 @@ void OnStart()
    Comment("script started, ",len,"\n");
    
    string terminal_data_path=TerminalInfoString(TERMINAL_DATA_PATH);
-//   string filename="hit_count.csv";
-   string filename="analysis.csv";
+   string filename="hit_count.csv";
    int filehandle=FileOpen(filename,FILE_WRITE|FILE_CSV,',');
    if(filehandle<0)
      {
@@ -35,10 +34,8 @@ void OnStart()
    Comment("file ok");
 //   FileWrite(filehandle,TimeCurrent(),Symbol(), EnumToString(ENUM_TIMEFRAMES(_Period)));
 
-   int history_size = Bars-len;
-   history_size = 1000;
-//   counting_matched_pattern_for_all(filehandle,history_size);
-   evaluating_each_matched_pattern(filehandle,referenced_pattern);
+   int history_size=min(history,Bars-len);
+   counting_matched_pattern_for_all(filehandle,history_size);
 
    FileClose(filehandle);
    Print("Done");
@@ -52,7 +49,7 @@ void counting_matched_pattern_for_all(int _filehandle,int _history_size)
    for(i=0;i<_history_size;i++)
    {
       thresh_hit_cnt=0;
-      for(j=0;j<Bars-len;j++)
+      for(j=0;j<_history_size;j++)
       {
          corrH = correlation_high(j,i,len);
          corrL = correlation_low(j,i,len);
@@ -60,24 +57,7 @@ void counting_matched_pattern_for_all(int _filehandle,int _history_size)
             thresh_hit_cnt++;
       }
       Comment(i,"/",_history_size);
-      FileWrite(_filehandle,High[i],thresh_hit_cnt);
-   }
-}
-
-void evaluating_each_matched_pattern(int _filehandle,int _ref)
-{  //_ref is the last bar of the reference pattern. others are to be compared with this one
-   int j;
-   double corrH,corrL;
-   for(j=0;j<Bars-len;j++)
-   {
-      corrH = correlation_high(_ref,j,len);
-      corrL = correlation_low(_ref,j,len);
-      if(corrH+corrL>correlation_thresh)
-      {
-         corrH = correlation_high(_ref-2,j-2,3);
-         corrL = correlation_low(_ref-2,j-2,3);
-         FileWrite(_filehandle,High[_ref],j,corrH,corrL);
-      }
+      FileWrite(_filehandle,High[i],i,thresh_hit_cnt);
    }
 }
 
@@ -157,7 +137,7 @@ double max(double v1, double v2=-1, double v3=-1, double v4=-1, double v5=-1, do
    if(v6>result)  result=v6;
    return result;
 }
-double min(double v1, double v2=1000, double v3=1000, double v4=1000, double v5=1000, double v6=1000)
+double min(double v1, double v2=65535, double v3=65535, double v4=65535, double v5=65535, double v6=65535)
 {
    double result = v1;
    if(v2<result)  result=v2;
