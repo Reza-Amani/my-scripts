@@ -53,8 +53,8 @@ void OnStart()
 void evaluating_later_bar(int &hits, int &good_hits, int _ref, int _late_bar, int _history_size)
 {  //_ref is the last bar of the reference pattern. others are to be compared with this one
    int j;
-   good_hits=0;
    hits=0;
+   good_hits=0;
    double corrH,corrL,corrS;
    for(j=0;j<_history_size;j++)
    {
