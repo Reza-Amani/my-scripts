@@ -12,8 +12,8 @@
 input int      len=10;
 input int history=20000;
 input double   correlation_thresh=285;
-input int referenced_pattern=3902;
-input int evaluation_len=5;
+//input int referenced_pattern=3902;
+//input int evaluation_len=5;
 //----macros
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
@@ -22,11 +22,10 @@ void OnStart()
 {
 //---
    Comment("script started, ",len,"\n");
-   
-   string terminal_data_path=TerminalInfoString(TERMINAL_DATA_PATH);
-   string filename="analysis.csv";
-   int filehandle=FileOpen(filename,FILE_WRITE|FILE_CSV,',');
-   if(filehandle<0)
+   int ref,i=0,hit_no1,good_hits1,hit_no2,good_hits2,hit_no3,good_hits3;
+   int infilehandle=FileOpen("hit_count_in.csv",FILE_READ|FILE_CSV,',');
+   int outfilehandle=FileOpen("hit_analyse.csv",FILE_WRITE|FILE_CSV,',');
+   if((infilehandle<0) || (outfilehandle<0))
      {
       Comment("file error 1");
       Print("Failed to open the file by the absolute path ");
@@ -34,21 +33,28 @@ void OnStart()
       return;
      }
    Comment("file ok");
-//   FileWrite(filehandle,TimeCurrent(),Symbol(), EnumToString(ENUM_TIMEFRAMES(_Period)));
-
-   int history_size=min(history,Bars-len);
-//   evaluating_each_matched_pattern(filehandle,referenced_pattern,history_size);
-   evaluating_halflen_later(filehandle,referenced_pattern,history_size);
-
-   FileClose(filehandle);
+   while(!FileIsEnding(infilehandle))
+   {
+      i++;
+      Comment(i);
+      ref=FileReadString(infilehandle);
+      evaluating_later_bar(hit_no1,good_hits1,ref,1,history);
+      evaluating_later_bar(hit_no2,good_hits2,ref,2,history);
+      evaluating_later_bar(hit_no3,good_hits3,ref,3,history);
+      FileWrite(outfilehandle,High[ref],ref,1111,hit_no1,good_hits1,hit_no2,good_hits2,hit_no3,good_hits3);
+   }
+   FileClose(infilehandle);
+   FileClose(outfilehandle);
    Print("Done");
   
 }
 
 
-void evaluating_halflen_later(int _filehandle,int _ref,int _history_size)
+void evaluating_later_bar(int &hits, int &good_hits, int _ref, int _late_bar, int _history_size)
 {  //_ref is the last bar of the reference pattern. others are to be compared with this one
    int j;
+   good_hits=0;
+   hits=0;
    double corrH,corrL,corrS;
    for(j=0;j<_history_size;j++)
    {
@@ -57,40 +63,22 @@ void evaluating_halflen_later(int _filehandle,int _ref,int _history_size)
       corrS = correlation_bar_size(_ref,j,len);
       if(corrH+corrL+corrS>correlation_thresh)
       {
-         if(Close[_ref]<Close[_ref-len/2])   //uptrend hereafter
+         hits++;
+         if(Close[_ref]<Close[_ref-_late_bar])   //uptrend hereafter
          {
-            if(Close[j]<Close[j-len/2])
-               FileWrite(_filehandle,High[_ref],j,1);
+            if(Close[j]<Close[j-_late_bar])
+               good_hits++;
             else
-               FileWrite(_filehandle,High[_ref],j,-1);
+               good_hits--;
          }
          else
          {  //downtrend hereafter
-            if(Close[j]>Close[j-len/2])
-               FileWrite(_filehandle,High[_ref],j,1);
+            if(Close[j]>Close[j-_late_bar])
+               good_hits++;
             else
-               FileWrite(_filehandle,High[_ref],j,-1);
+               good_hits++;
          }
                
-      }
-   }
-}
-
-void evaluating_each_matched_pattern(int _filehandle,int _ref,int _history_size)
-{  //_ref is the last bar of the reference pattern. others are to be compared with this one
-   int j;
-   double corrH,corrL,corrS;
-   for(j=0;j<_history_size;j++)
-   {
-      corrH = correlation_high(_ref,j,len);
-      corrL = correlation_low(_ref,j,len);
-      corrS = correlation_bar_size(_ref,j,len);
-      if(corrH+corrL+corrS>correlation_thresh)
-      {
-         corrH = correlation_high(_ref-evaluation_len+2,j-evaluation_len+2,evaluation_len);
-         corrL = correlation_low(_ref-evaluation_len+2,j-evaluation_len+2,evaluation_len);
-         corrS = correlation_bar_size(_ref-evaluation_len+2,j-evaluation_len+2,evaluation_len);
-         FileWrite(_filehandle,High[_ref],j,corrH,corrL,corrS,corrH+corrL+corrS);
       }
    }
 }
