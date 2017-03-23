@@ -51,11 +51,11 @@ void OnStart()
          if(corrH+corrL+corrS>correlation_thresh)
          {
             number_of_hits++;
-            if(High[_ref+j+1]<High[_ref+j])
+            if(High[_ref+j-1]>High[_ref+j])
                no_of_b1_higher++;
-            if(High[_ref+j+2]<High[_ref+j])
+            if(High[_ref+j-2]>High[_ref+j])
                no_of_b2_higher++;
-            if(High[_ref+j+3]<High[_ref+j])
+            if(High[_ref+j-3]>High[_ref+j])
                no_of_b3_higher++;
 
 /*            if(Close[_ref]<Close[_ref-len/2])   //uptrend hereafter
@@ -75,8 +75,17 @@ void OnStart()
 */                  
          }
       }
-      if(number_of_hits>4)
-         FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher);
+      if(number_of_hits>10)
+      {
+         int b1_higher=1,b2_higher=1,b3_higher=1;
+         if(High[_ref-1]<High[_ref])
+            b1_higher=-1;
+         if(High[_ref-2]<High[_ref])
+            b2_higher=-1;
+         if(High[_ref-3]<High[_ref])
+            b3_higher=-1;
+         FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher,b1_higher,no_of_b2_higher,b2_higher,no_of_b3_higher,b3_higher);
+      }
       show_log_plus(_ref);
    }
    FileClose(outfilehandle);
