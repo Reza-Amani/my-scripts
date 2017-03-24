@@ -23,7 +23,7 @@ void OnStart()
 {
 //---
    add_log("script started");
-   int outfilehandle=FileOpen("go_through_history.csv",FILE_WRITE|FILE_CSV,',');
+   int outfilehandle=FileOpen("./trydata/go_through_history_"+Symbol()+EnumToString(ENUM_TIMEFRAMES(_Period))+".csv",FILE_WRITE|FILE_CSV,',');
    if(outfilehandle<0)
    {
       Comment("file error");
