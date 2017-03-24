@@ -169,7 +169,7 @@ double correlation_bar_size(int pattern1, int pattern2, int _len)
       y_yb2 += (y-avg2)*(y-avg2);
    }
    
-   if(x_xb2 * x_xb2 == 0)
+   if(x_xb2 * y_yb2 == 0)
       return 0;
       
    return 100*x_xby_yb/MathSqrt(x_xb2 * y_yb2);
@@ -201,7 +201,7 @@ double correlation_high(int pattern1, int pattern2, int _len)
       y_yb2 += (y-avg2)*(y-avg2);
    }
    
-   if(x_xb2 * x_xb2 == 0)
+   if(x_xb2 * y_yb2 == 0)
       return 0;
       
    return 100*x_xby_yb/MathSqrt(x_xb2 * y_yb2);
@@ -233,7 +233,7 @@ double correlation_low(int pattern1, int pattern2, int _len)
       y_yb2 += (y-avg2)*(y-avg2);
    }
    
-   if(x_xb2 * x_xb2 == 0)
+   if(x_xb2 * y_yb2 == 0)
       return 0;
       
    return 100*x_xby_yb/MathSqrt(x_xb2 * y_yb2);
