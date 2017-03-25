@@ -16,6 +16,9 @@ input double   correlation_thresh=3*95;
 //----macros
 //----globals
 string logstr = "";
+int no_of_hits_p0=0;
+int no_of_hits_p10=0;
+int no_of_output_lines=0;
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
 //+------------------------------------------------------------------+
@@ -23,7 +26,7 @@ void OnStart()
 {
 //---
    add_log("script started");
-   int outfilehandle=FileOpen("./trydata/go_through_history_"+Symbol()+EnumToString(ENUM_TIMEFRAMES(_Period))+".csv",FILE_WRITE|FILE_CSV,',');
+   int outfilehandle=FileOpen("./trydata/go_through_history_"+Symbol()+EnumToString(ENUM_TIMEFRAMES(_Period))+"_"+IntegerToString(pattern_len)+"_"+IntegerToString(correlation_thresh)+".csv",FILE_WRITE|FILE_CSV,',');
    if(outfilehandle<0)
    {
       Comment("file error");
@@ -31,8 +34,7 @@ void OnStart()
       Print("Error code ",GetLastError());
       return;
    }
-   add_log("file ok");
-   add_log("Bar: ");
+   add_log("file ok\r\n");
    
    int history_size=min(Bars,history);
    int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_b3_higher;
@@ -75,8 +77,11 @@ void OnStart()
 */                  
          }
       }
-      if(number_of_hits>10)
+      if(number_of_hits>0)
+         no_of_hits_p0++;
+      if(number_of_hits>2)
       {
+         no_of_hits_p10++;
          int b1_higher=1,b2_higher=1,b3_higher=1;
          if(High[_ref-1]<High[_ref])
             b1_higher=-1;
@@ -84,9 +89,15 @@ void OnStart()
             b2_higher=-1;
          if(High[_ref-3]<High[_ref])
             b3_higher=-1;
-         FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher,b1_higher,no_of_b2_higher,b2_higher,no_of_b3_higher,b3_higher);
+         if( (no_of_b1_higher/number_of_hits <0.3)||(no_of_b1_higher/number_of_hits <0.7)
+            ||(no_of_b2_higher/number_of_hits <0.3)||(no_of_b2_higher/number_of_hits <0.7)
+            ||(no_of_b3_higher/number_of_hits <0.3)||(no_of_b3_higher/number_of_hits <0.7))
+         {
+            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher,b1_higher,no_of_b2_higher,b2_higher,no_of_b3_higher,b3_higher);
+            no_of_output_lines++;
+         }
       }
-      show_log_plus(_ref);
+      show_log_plus("Bar: ",_ref," /",history_size-back_search_len,"\r\nno_of_hits_p0 ",no_of_hits_p0,"\r\no_of_hits_p10 ",no_of_hits_p10,"\r\no_of_output_lines ",no_of_output_lines);
    }
    FileClose(outfilehandle);
    Print("Done");
@@ -105,6 +116,10 @@ void show_log_plus(string str)
 void show_log_plus(int i)
 {
    Comment(logstr,i);
+}
+void show_log_plus(string s1,int i1,string s2,int i2,string s3,int i3,string s4,int i4,string s5,int i5)
+{
+   Comment(logstr,s1,i1,s2,i2,s3,i3,s4,i4,s5,i5);
 }
 void reset_log()
 {
