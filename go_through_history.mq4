@@ -39,6 +39,7 @@ void OnStart()
    int history_size=min(Bars,history);
    int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_b3_higher;
    double corrH,corrL,corrS;
+   double aH,aL;
    for(int _ref=10;_ref<history_size-back_search_len;_ref++)
    {
       number_of_hits = 0;
@@ -60,23 +61,12 @@ void OnStart()
             if(High[_ref+j-3]>High[_ref+j])
                no_of_b3_higher++;
 
-/*            if(Close[_ref]<Close[_ref-len/2])   //uptrend hereafter
-            {
-               if(Close[j]<Close[j-len/2])
-                  FileWrite(_filehandle,High[_ref],j,1);
-               else
-                  FileWrite(_filehandle,High[_ref],j,-1);
-            }
-            else
-            {  //downtrend hereafter
-               if(Close[j]>Close[j-len/2])
-                  FileWrite(_filehandle,High[_ref],j,1);
-               else
-                  FileWrite(_filehandle,High[_ref],j,-1);
-            }
-*/                  
+            aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-1]);
+            aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-1]);
+            FileWrite(outfilehandle,High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
          }
       }
+      
       if(number_of_hits>0)
          no_of_hits_p0++;
       if(number_of_hits>2)
@@ -104,6 +94,13 @@ void OnStart()
   
 }
 
+double alpha(double refH, double refL, double in)
+{
+   if(refH==refL)
+      return 99;
+   else
+      return (in-refL)/(refH-refL);
+}
 void add_log(string str)
 {
    logstr+=str;
