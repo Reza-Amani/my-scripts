@@ -14,10 +14,11 @@ input int      back_search_len=2000;
 input int      history=20000;
 input double   correlation_thresh=3*95;
 //----macros
+#define _min_hit 5
 //----globals
 string logstr = "";
 int no_of_hits_p0=0;
-int no_of_hits_p10=0;
+int no_of_hits_pthresh=0;
 int no_of_output_lines=0;
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
@@ -37,7 +38,7 @@ void OnStart()
    add_log("file ok\r\n");
    
    int history_size=min(Bars,history);
-   int number_of_hits,no_of_b1_higher,no_of_b2_higher,no_of_b3_higher;
+   int number_of_hits,no_of_b1_higher,no_of_b2_higher;
    double corrH,corrL,corrS;
    double aH,aL;
    for(int _ref=10;_ref<history_size-back_search_len;_ref++)
@@ -45,7 +46,6 @@ void OnStart()
       number_of_hits = 0;
       no_of_b1_higher=0;
       no_of_b2_higher=0;
-      no_of_b3_higher=0;
       for(int j=10;j<back_search_len-pattern_len;j++)
       {
          corrH = correlation_high(_ref,_ref+j,pattern_len);
@@ -58,36 +58,31 @@ void OnStart()
                no_of_b1_higher++;
             if(High[_ref+j-2]>High[_ref+j])
                no_of_b2_higher++;
-            if(High[_ref+j-3]>High[_ref+j])
-               no_of_b3_higher++;
 
             aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-1]);
             aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-1]);
-            FileWrite(outfilehandle,High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
+            FileWrite(outfilehandle,High[_ref],High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
          }
       }
       
       if(number_of_hits>0)
          no_of_hits_p0++;
-      if(number_of_hits>2)
+      if(number_of_hits>_min_hit)
       {
-         no_of_hits_p10++;
-         int b1_higher=1,b2_higher=1,b3_higher=1;
+         no_of_hits_pthresh++;
+         int b1_higher=1,b2_higher=1;
          if(High[_ref-1]<High[_ref])
             b1_higher=-1;
          if(High[_ref-2]<High[_ref])
             b2_higher=-1;
-         if(High[_ref-3]<High[_ref])
-            b3_higher=-1;
-         if( (no_of_b1_higher/number_of_hits <0.3)||(no_of_b1_higher/number_of_hits <0.7)
-            ||(no_of_b2_higher/number_of_hits <0.3)||(no_of_b2_higher/number_of_hits <0.7)
-            ||(no_of_b3_higher/number_of_hits <0.3)||(no_of_b3_higher/number_of_hits <0.7))
+         if( (no_of_b1_higher/number_of_hits <0.3)||(no_of_b1_higher/number_of_hits >0.7)
+            ||(no_of_b2_higher/number_of_hits <0.3)||(no_of_b2_higher/number_of_hits >0.7))
          {
-            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher,b1_higher,no_of_b2_higher,b2_higher,no_of_b3_higher,b3_higher);
+            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher,b1_higher,no_of_b2_higher,b2_higher,no_of_b1_higher/number_of_hits);
             no_of_output_lines++;
          }
       }
-      show_log_plus("Bar: ",_ref," /",history_size-back_search_len,"\r\nno_of_hits_p0 ",no_of_hits_p0,"\r\no_of_hits_p10 ",no_of_hits_p10,"\r\no_of_output_lines ",no_of_output_lines);
+      show_log_plus("Bar: ",_ref," /",history_size-back_search_len,"\r\nno_of_hits_p0 ",no_of_hits_p0,"\r\no_of_hits_p10 ",no_of_hits_pthresh,"\r\no_of_output_lines ",no_of_output_lines);
    }
    FileClose(outfilehandle);
    Print("Done");
