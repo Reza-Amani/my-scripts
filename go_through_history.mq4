@@ -77,10 +77,10 @@ void OnStart()
       
       if(number_of_hits>_min_hit)
       {
-         int next_bar_direction=1;
-         if(Open[_ref-1]<Close[_ref])
+         int next_bar_direction=0;
+         if(Open[_ref-1]<Close[_ref-1])
             next_bar_direction=1;
-         if(Open[_ref-1]>Close[_ref])
+         if(Open[_ref-1]>Close[_ref-1])
             next_bar_direction=-1;
          
          double ave_alphaH = array_ave(alpha_H1,number_of_hits);
@@ -99,7 +99,7 @@ void OnStart()
          if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
             || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
          {
-            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,next_bar_direction, "alpha",ave_alphaH,ave_alphaL,"strategy",stragegy_openclose_profit_sum, stragegy_openclose_noof_profits, stragegy_openclose_noof_losses);
+            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,next_bar_direction,Close[_ref-1]-Open[_ref-1], "alpha",ave_alphaH,ave_alphaL,"strategy",stragegy_openclose_profit_sum, stragegy_openclose_noof_profits, stragegy_openclose_noof_losses);
             no_of_output_lines++;
          }  //end of logging/trading selected patterns
       }  //end of sisters process
