@@ -17,6 +17,7 @@ input double   correlation_thresh=3*95;
 #define _min_hit 5
 //----globals
 double alpha_H1[100],alpha_L1[100];
+int sister_bar_no[100];
 string logstr = "";
 int no_of_hits_p0=0;
 int no_of_hits_pthresh=0;
@@ -60,7 +61,8 @@ void OnStart()
             aL=max(aL,-2);
             alpha_H1[number_of_hits] = aH;
             alpha_L1[number_of_hits] = aL;
-
+            sister_bar_no[number_of_hits] = _ref+j;
+            
             if(High[_ref+j-1]>High[_ref+j])
                no_of_b1_higher++;
             if(High[_ref+j-2]>High[_ref+j])
@@ -75,19 +77,29 @@ void OnStart()
       
       if(number_of_hits>_min_hit)
       {
-         int b1_higher=1,b2_higher=1;
-         if(High[_ref-1]<High[_ref])
-            b1_higher=-1;
-         if(High[_ref-2]<High[_ref])
-            b2_higher=-1;
+         int next_bar_direction=1;
+         if(Open[_ref-1]<Close[_ref])
+            next_bar_direction=1;
+         if(Open[_ref-1]>Close[_ref])
+            next_bar_direction=-1;
          
          double ave_alphaH = array_ave(alpha_H1,number_of_hits);
          double ave_alphaL = array_ave(alpha_L1,number_of_hits);
-         
-         if( (no_of_b1_higher/number_of_hits <0.3)||(no_of_b1_higher/number_of_hits >0.7)
-            ||(no_of_b2_higher/number_of_hits <0.3)||(no_of_b2_higher/number_of_hits >0.7))
+//double DiffPips = MathAbs(NormalizeDouble(var1-cprice,Digits)/Point);         
+         int stragegy_openclose_profit_sum=0, stragegy_openclose_noof_profits=0, stragegy_openclose_noof_losses=0;
+         for(int i=0;i<number_of_hits;i++)
          {
-            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher,b1_higher,no_of_b2_higher,b2_higher, 100*no_of_b1_higher/number_of_hits,ave_alphaH,ave_alphaL);
+            int trade_pips = strategy_openclose_exe(sister_bar_no[i]);
+            stragegy_openclose_profit_sum += trade_pips;
+            if(trade_pips>0)
+               stragegy_openclose_noof_profits++;
+            if(trade_pips<0)
+               stragegy_openclose_noof_losses++;
+         }
+         if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
+            || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
+         {
+            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,next_bar_direction, "alpha",ave_alphaH,ave_alphaL,"strategy",stragegy_openclose_profit_sum, stragegy_openclose_noof_profits, stragegy_openclose_noof_losses);
             no_of_output_lines++;
          }  //end of logging/trading selected patterns
       }  //end of sisters process
@@ -101,7 +113,11 @@ void OnStart()
    Print("Done");
   
 }
-
+int strategy_openclose_exe(int bar_no)
+{  //simulates the strategy on bar_no-1 and returns the revenue in pips
+   double result = Close[bar_no-1]-Open[bar_no-1];
+   return (int)(NormalizeDouble(result,Digits)/Point);
+} 
 double array_ave(double &array[], int size)
 {
    double result=0;
