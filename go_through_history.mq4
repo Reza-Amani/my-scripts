@@ -16,6 +16,7 @@ input double   correlation_thresh=3*95;
 //----macros
 #define _min_hit 5
 //----globals
+double alpha_H1[100],alpha_L1[100];
 string logstr = "";
 int no_of_hits_p0=0;
 int no_of_hits_pthresh=0;
@@ -53,42 +54,63 @@ void OnStart()
          corrS = correlation_bar_size(_ref,_ref+j,pattern_len);
          if(corrH+corrL+corrS>correlation_thresh)
          {
-            number_of_hits++;
+            aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-1]);
+            aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-1]);
+            aH=min(aH,3.0);
+            aL=max(aL,-2);
+            alpha_H1[number_of_hits] = aH;
+            alpha_L1[number_of_hits] = aL;
+
             if(High[_ref+j-1]>High[_ref+j])
                no_of_b1_higher++;
             if(High[_ref+j-2]>High[_ref+j])
                no_of_b2_higher++;
 
-            aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-1]);
-            aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-1]);
-            FileWrite(outfilehandle,High[_ref],High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
+//            FileWrite(outfilehandle,High[_ref],High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
+            number_of_hits++;
+            if(number_of_hits>=100)
+               break;
          }
-      }
+      }  //end of search for sisters
       
-      if(number_of_hits>0)
-         no_of_hits_p0++;
       if(number_of_hits>_min_hit)
       {
-         no_of_hits_pthresh++;
          int b1_higher=1,b2_higher=1;
          if(High[_ref-1]<High[_ref])
             b1_higher=-1;
          if(High[_ref-2]<High[_ref])
             b2_higher=-1;
+         
+         double ave_alphaH = array_ave(alpha_H1,number_of_hits);
+         double ave_alphaL = array_ave(alpha_L1,number_of_hits);
+         
          if( (no_of_b1_higher/number_of_hits <0.3)||(no_of_b1_higher/number_of_hits >0.7)
             ||(no_of_b2_higher/number_of_hits <0.3)||(no_of_b2_higher/number_of_hits >0.7))
          {
-            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher,b1_higher,no_of_b2_higher,b2_higher,no_of_b1_higher/number_of_hits);
+            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,no_of_b1_higher,b1_higher,no_of_b2_higher,b2_higher, 100*no_of_b1_higher/number_of_hits,ave_alphaH,ave_alphaL);
             no_of_output_lines++;
-         }
-      }
-      show_log_plus("Bar: ",_ref," /",history_size-back_search_len,"\r\nno_of_hits_p0 ",no_of_hits_p0,"\r\no_of_hits_p10 ",no_of_hits_pthresh,"\r\no_of_output_lines ",no_of_output_lines);
+         }  //end of logging/trading selected patterns
+      }  //end of sisters process
+      if(number_of_hits>0)
+         no_of_hits_p0++;
+      if(number_of_hits>_min_hit)
+         no_of_hits_pthresh++;
+      show_log_plus("Bar: ",_ref," /",history_size-back_search_len,"\r\nno_of_hits_p0 ",no_of_hits_p0,"\r\nno_of_hits_p10 ",no_of_hits_pthresh,"\r\nno_of_output_lines ",no_of_output_lines);
    }
    FileClose(outfilehandle);
    Print("Done");
   
 }
 
+double array_ave(double &array[], int size)
+{
+   double result=0;
+   if(size==0)
+      return 0;
+   for(int i=0; i<size; i++)
+      result+=array[i];
+   return result/size;
+}
 double alpha(double refH, double refL, double in)
 {
    if(refH==refL)
@@ -248,7 +270,7 @@ double correlation_low(int pattern1, int pattern2, int _len)
 }
 //general funcs
 //+------------------------------------------------------------------+
-double max(double v1, double v2=-1, double v3=-1, double v4=-1, double v5=-1, double v6=-1)
+double max(double v1, double v2=-DBL_MAX, double v3=-DBL_MAX, double v4=-DBL_MAX, double v5=-DBL_MAX, double v6=-DBL_MAX)
 {
    double result = v1;
    if(v2>result)  result=v2;
@@ -258,7 +280,7 @@ double max(double v1, double v2=-1, double v3=-1, double v4=-1, double v5=-1, do
    if(v6>result)  result=v6;
    return result;
 }
-double min(double v1, double v2=65535, double v3=65535, double v4=65535, double v5=65535, double v6=65535)
+double min(double v1, double v2=DBL_MAX, double v3=DBL_MAX, double v4=DBL_MAX, double v5=DBL_MAX, double v6=DBL_MAX)
 {
    double result = v1;
    if(v2<result)  result=v2;
