@@ -59,6 +59,8 @@ void OnStart()
             aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-1]);
             aH=min(aH,3.0);
             aL=max(aL,-2);
+            if(aL==99)
+               aL=-2;
             alpha_H1[number_of_hits] = aH;
             alpha_L1[number_of_hits] = aL;
             sister_bar_no[number_of_hits] = _ref+j;
@@ -77,16 +79,12 @@ void OnStart()
       
       if(number_of_hits>_min_hit)
       {
-         int next_bar_direction=0;
-         if(Open[_ref-1]<Close[_ref-1])
-            next_bar_direction=1;
-         if(Open[_ref-1]>Close[_ref-1])
-            next_bar_direction=-1;
-         
          double ave_alphaH = array_ave(alpha_H1,number_of_hits);
          double ave_alphaL = array_ave(alpha_L1,number_of_hits);
 //double DiffPips = MathAbs(NormalizeDouble(var1-cprice,Digits)/Point);         
          int stragegy_openclose_profit_sum=0, stragegy_openclose_noof_profits=0, stragegy_openclose_noof_losses=0;
+         int stragegy_lowclose_profit_sum=0, stragegy_lowclose_noof_profits=0, stragegy_lowclose_noof_losses=0;
+         int stragegy_lowhigh_unrealistic_profit_sum=0, stragegy_lowhigh_unrealistic_noof_profits=0, stragegy_lowhigh_unrealistic_noof_losses=0;
          for(int i=0;i<number_of_hits;i++)
          {
             int trade_pips = strategy_openclose_exe(sister_bar_no[i]);
@@ -95,11 +93,37 @@ void OnStart()
                stragegy_openclose_noof_profits++;
             if(trade_pips<0)
                stragegy_openclose_noof_losses++;
+               
+            trade_pips = strategy_lowclose_exe(sister_bar_no[i],ave_alphaH,ave_alphaL);
+            stragegy_lowclose_profit_sum += trade_pips;
+            if(trade_pips>0)
+               stragegy_lowclose_noof_profits++;
+            if(trade_pips<0)
+               stragegy_lowclose_noof_losses++;
+   
+            trade_pips = strategy_lowhigh_unrealistic_exe(sister_bar_no[i],ave_alphaH,ave_alphaL);
+            stragegy_lowhigh_unrealistic_profit_sum += trade_pips;
+            if(trade_pips>0)
+               stragegy_lowhigh_unrealistic_noof_profits++;
+            if(trade_pips<0)
+               stragegy_lowhigh_unrealistic_noof_losses++;
+   
          }
-         if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
-            || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
+         int trade_pips = strategy_lowclose_exe(_ref,ave_alphaH,ave_alphaL);
+         int next_bar_direction=0;
+         if(trade_pips>0)
+            next_bar_direction=1;
+         if(trade_pips<0)
+            next_bar_direction=-1;
+//         if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
+//            || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
          {
-            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,next_bar_direction,Close[_ref-1]-Open[_ref-1], "alpha",ave_alphaH,ave_alphaL,"strategy",stragegy_openclose_profit_sum, stragegy_openclose_noof_profits, stragegy_openclose_noof_losses);
+            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,next_bar_direction,
+                         "alpha",ave_alphaH,ave_alphaL,
+                         "st_openclose",stragegy_openclose_profit_sum, stragegy_openclose_noof_profits, stragegy_openclose_noof_losses,
+                         "st_lowclose",stragegy_lowclose_profit_sum, stragegy_lowclose_noof_profits, stragegy_lowclose_noof_losses,
+                         "st_lowhigh_un",stragegy_lowhigh_unrealistic_profit_sum, stragegy_lowhigh_unrealistic_noof_profits, stragegy_lowhigh_unrealistic_noof_losses,
+                         "");
             no_of_output_lines++;
          }  //end of logging/trading selected patterns
       }  //end of sisters process
@@ -113,6 +137,28 @@ void OnStart()
    Print("Done");
   
 }
+//////////////////////////////////////////////////////////////////////////////////////////////strategies
+int strategy_lowclose_exe(int bar_no, double _ave_alphaH, double _ave_alphaL)
+{  //simulates the strategy on bar_no-1 and returns the revenue in pips
+   double buy_limit_price = price_fromalpha(High[bar_no], Low[bar_no], _ave_alphaL);
+   if( Low[bar_no-1] > buy_limit_price)   //doesn't reach the buy limit
+      return 0;
+   double result = Close[bar_no-1]-buy_limit_price;
+   return (int)(NormalizeDouble(result,Digits)/Point);
+} 
+int strategy_lowhigh_unrealistic_exe(int bar_no, double _ave_alphaH, double _ave_alphaL)
+{  //simulates the strategy on bar_no-1 and returns the revenue in pips
+   double buy_limit_price = price_fromalpha(High[bar_no], Low[bar_no], _ave_alphaL);
+   double buy_take_profit = price_fromalpha(High[bar_no], Low[bar_no], _ave_alphaH);
+   double result;
+   if( Low[bar_no-1] > buy_limit_price)   //doesn't reach the buy limit
+      return 0;
+   if( High[bar_no-1] < buy_take_profit)  //doesn't reach to tp
+      result = Close[bar_no-1]-buy_limit_price;
+   else//tp
+      result = buy_take_profit-buy_limit_price;
+   return (int)(NormalizeDouble(result,Digits)/Point);
+} 
 int strategy_openclose_exe(int bar_no)
 {  //simulates the strategy on bar_no-1 and returns the revenue in pips
    double result = Close[bar_no-1]-Open[bar_no-1];
@@ -126,6 +172,10 @@ double array_ave(double &array[], int size)
    for(int i=0; i<size; i++)
       result+=array[i];
    return result/size;
+}
+double price_fromalpha(double refH, double refL, double alpha)
+{
+   return refL + alpha * (refH-refL);
 }
 double alpha(double refH, double refL, double in)
 {
