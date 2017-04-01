@@ -128,17 +128,17 @@ void OnStart()
 
 //         if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
 //            || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
-         {
-            FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,
-                         "alpha",ave_alphaH,ave_alphaL,
-                         "st_openclose",stragegy_openclose_profit_sum, stragegy_openclose_noof_profits, stragegy_openclose_noof_losses,strategy_openclose_exe(_ref),
-                         "st_lowclose",stragegy_lowclose_profit_sum, stragegy_lowclose_noof_profits, stragegy_lowclose_noof_losses,strategy_lowclose_exe(_ref,ave_alphaH,ave_alphaL),
-                         "st_lowhigh_un",stragegy_lowhigh_unrealistic_profit_sum, stragegy_lowhigh_unrealistic_noof_profits, stragegy_lowhigh_unrealistic_noof_losses,strategy_lowhigh_unrealistic_exe(_ref,ave_alphaH,ave_alphaL),
-                         "st_openHigh",stragegy_openHigh_profit_sum, stragegy_openHigh_noof_profits, stragegy_openHigh_noof_losses,strategy_openHigh_exe(_ref,ave_alphaH,ave_alphaL),
-                         "st_openLow",stragegy_openLow_profit_sum, stragegy_openLow_noof_profits, stragegy_openLow_noof_losses,strategy_openLow_exe(_ref,ave_alphaH,ave_alphaL),
-                         "");
-            no_of_output_lines++;
-         }  //end of logging/trading selected patterns
+         if(number_of_hits>10)
+            if( (stragegy_openHigh_noof_profits > 2*stragegy_openHigh_noof_losses)
+               || (stragegy_openLow_noof_profits >2* stragegy_openLow_noof_losses))
+            {
+               FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,
+                            "alpha",ave_alphaH,ave_alphaL,
+                            "st_openHigh",stragegy_openHigh_profit_sum, stragegy_openHigh_noof_profits, stragegy_openHigh_noof_losses,strategy_openHigh_exe(_ref,ave_alphaH,ave_alphaL),
+                            "st_openLow",stragegy_openLow_profit_sum, stragegy_openLow_noof_profits, stragegy_openLow_noof_losses,strategy_openLow_exe(_ref,ave_alphaH,ave_alphaL),
+                            "");
+               no_of_output_lines++;
+            }  //end of logging/trading selected patterns
       }  //end of sisters process
       if(number_of_hits>0)
          no_of_hits_p0++;
