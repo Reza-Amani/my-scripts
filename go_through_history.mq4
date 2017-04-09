@@ -1,22 +1,17 @@
-//+------------------------------------------------------------------+
-//|                                                       filing.mq4 |
-//|                                                             Reza |
-//|                                             https://www.mql5.com |
-//+------------------------------------------------------------------+
 #property copyright "Reza"
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 #property strict
 #property script_show_inputs
 //--- input parameters
-input int      pattern_len=10;
-input int      back_search_len=2000;
+input int      pattern_len=5;
+input int      back_search_len=10000;
 input int      history=20000;
 input double   correlation_thresh=3*95;
 //----macros
 #define _min_hit 5
 //----globals
-double alpha_H1[100],alpha_L1[100];
+double alpha_H1[100],alpha_L1[100],alpha_H2[100],alpha_L2[100];
 int sister_bar_no[100];
 string logstr = "";
 int no_of_hits_p0=0;
@@ -55,19 +50,28 @@ void OnStart()
          corrS = correlation_bar_size(_ref,_ref+j,pattern_len);
          if(corrH+corrL+corrS>correlation_thresh)
          {
+            //saving alpha's for next 2 bars
             aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-1]);
             aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-1]);
-            aH=min(aH,3.0);
-            aL=max(aL,-2);
+            aH=min(aH,2.5);
+            aL=max(aL,-2.5);
             if(aL==99)
-               aL=-2;
+               aL=-2.5;
             alpha_H1[number_of_hits] = aH;
             alpha_L1[number_of_hits] = aL;
+            aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-2]);
+            aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-2]);
+            aH=min(aH,2.5);
+            aL=max(aL,-2.5);
+            if(aL==99)
+               aL=-2.5;
+            alpha_H2[number_of_hits] = aH;
+            alpha_L2[number_of_hits] = aL;
             sister_bar_no[number_of_hits] = _ref+j;
             
-            if(High[_ref+j-1]>High[_ref+j])
+            if( (High[_ref+j-1]+Low[_ref+j-1])/2 > (High[_ref+j]+Low[_ref+j])/2 )
                no_of_b1_higher++;
-            if(High[_ref+j-2]>High[_ref+j])
+            if( (High[_ref+j-2]+Low[_ref+j-2])/2 > (High[_ref+j]+Low[_ref+j])/2 )
                no_of_b2_higher++;
 
 //            FileWrite(outfilehandle,High[_ref],High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
@@ -82,7 +86,6 @@ void OnStart()
          double ave_alphaH = array_ave(alpha_H1,number_of_hits);
          double ave_alphaL = array_ave(alpha_L1,number_of_hits);
 //double DiffPips = MathAbs(NormalizeDouble(var1-cprice,Digits)/Point);         
-         int stragegy_openclose_profit_sum=0, stragegy_openclose_noof_profits=0, stragegy_openclose_noof_losses=0;
          int stragegy_lowclose_profit_sum=0, stragegy_lowclose_noof_profits=0, stragegy_lowclose_noof_losses=0;
          int stragegy_lowhigh_unrealistic_profit_sum=0, stragegy_lowhigh_unrealistic_noof_profits=0, stragegy_lowhigh_unrealistic_noof_losses=0;
          int stragegy_openHigh_profit_sum=0, stragegy_openHigh_noof_profits=0, stragegy_openHigh_noof_losses=0;
