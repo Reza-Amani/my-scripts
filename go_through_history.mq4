@@ -10,6 +10,7 @@ input int      history=20000;
 input double   correlation_thresh=3*95;
 //----macros
 #define _min_hit 5
+#define _MAX_ALPHA 2.5
 //----globals
 double alpha_H1[100],alpha_L1[100],alpha_H2[100],alpha_L2[100];
 int sister_bar_no[100];
@@ -86,19 +87,29 @@ void OnStart()
          double ave_alphaH = array_ave(alpha_H1,number_of_hits);
          double ave_alphaL = array_ave(alpha_L1,number_of_hits);
 //double DiffPips = MathAbs(NormalizeDouble(var1-cprice,Digits)/Point);         
+         int stragegy_halfhigher1_profit_sum=0, stragegy_halfhigher1_noof_profits=0, stragegy_halfhigher1_noof_losses=0;
+         int stragegy_halfhigher2_profit_sum=0, stragegy_halfhigher2_noof_profits=0, stragegy_halfhigher2_noof_losses=0;
          int stragegy_lowclose_profit_sum=0, stragegy_lowclose_noof_profits=0, stragegy_lowclose_noof_losses=0;
-         int stragegy_lowhigh_unrealistic_profit_sum=0, stragegy_lowhigh_unrealistic_noof_profits=0, stragegy_lowhigh_unrealistic_noof_losses=0;
          int stragegy_openHigh_profit_sum=0, stragegy_openHigh_noof_profits=0, stragegy_openHigh_noof_losses=0;
          int stragegy_openHighifl_profit_sum=0, stragegy_openHighifl_noof_profits=0, stragegy_openHighifl_noof_losses=0;
          int stragegy_openLow_profit_sum=0, stragegy_openLow_noof_profits=0, stragegy_openLow_noof_losses=0;
          for(int i=0;i<number_of_hits;i++)
          {
-            int trade_pips = strategy_openclose_exe(sister_bar_no[i]);
-            stragegy_openclose_profit_sum += trade_pips;
+            int trade_pips;
+               
+            trade_pips = strategy_halfhigher1_exe(sister_bar_no[i],ave_alphaH,ave_alphaL);
+            stragegy_halfhigher1_profit_sum += trade_pips;
             if(trade_pips>0)
-               stragegy_openclose_noof_profits++;
+               stragegy_halfhigher1_noof_profits++;
             if(trade_pips<0)
-               stragegy_openclose_noof_losses++;
+               stragegy_halfhigher1_noof_losses++;
+               
+            trade_pips = strategy_halfhigher2_exe(sister_bar_no[i],ave_alphaH,ave_alphaL);
+            stragegy_halfhigher2_profit_sum += trade_pips;
+            if(trade_pips>0)
+               stragegy_halfhigher2_noof_profits++;
+            if(trade_pips<0)
+               stragegy_halfhigher2_noof_losses++;
                
             trade_pips = strategy_lowclose_exe(sister_bar_no[i],ave_alphaH,ave_alphaL);
             stragegy_lowclose_profit_sum += trade_pips;
@@ -107,13 +118,6 @@ void OnStart()
             if(trade_pips<0)
                stragegy_lowclose_noof_losses++;
    
-            trade_pips = strategy_lowhigh_unrealistic_exe(sister_bar_no[i],ave_alphaH,ave_alphaL);
-            stragegy_lowhigh_unrealistic_profit_sum += trade_pips;
-            if(trade_pips>0)
-               stragegy_lowhigh_unrealistic_noof_profits++;
-            if(trade_pips<0)
-               stragegy_lowhigh_unrealistic_noof_losses++;
-
             trade_pips = strategy_openHigh_exe(sister_bar_no[i],ave_alphaH,ave_alphaL);
             stragegy_openHigh_profit_sum += trade_pips;
             if(trade_pips>0)
@@ -140,14 +144,13 @@ void OnStart()
 //         if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
 //            || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
          if(number_of_hits>20)
-            if( (stragegy_openHighifl_noof_profits >2* stragegy_openHighifl_noof_losses )
-               || (stragegy_openHigh_noof_profits >2* stragegy_openHigh_noof_losses ))
+            if( stragegy_halfhigher1_noof_profits >2* stragegy_halfhigher1_noof_losses )
             {
                FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,
                             "alpha",ave_alphaH,ave_alphaL,
-                            "st_openHigh",stragegy_openHigh_profit_sum, stragegy_openHigh_noof_profits, stragegy_openHigh_noof_losses,strategy_openHigh_exe(_ref,ave_alphaH,ave_alphaL),
+                            "st_halfhigher1",stragegy_halfhigher1_profit_sum, stragegy_halfhigher1_noof_profits, stragegy_halfhigher1_noof_losses,strategy_halfhigher1_exe(_ref,ave_alphaH,ave_alphaL),
+                            "st_halfhigher2",stragegy_halfhigher2_profit_sum, stragegy_halfhigher2_noof_profits, stragegy_halfhigher2_noof_losses,strategy_halfhigher2_exe(_ref,ave_alphaH,ave_alphaL),
                             "st_openHighifl",stragegy_openHighifl_profit_sum, stragegy_openHighifl_noof_profits, stragegy_openHighifl_noof_losses,strategy_openHighifl_exe(_ref,ave_alphaH,ave_alphaL),
-//                            "st_openLow",stragegy_openLow_profit_sum, stragegy_openLow_noof_profits, stragegy_openLow_noof_losses,strategy_openLow_exe(_ref,ave_alphaH,ave_alphaL),
                             "");
                no_of_output_lines++;
             }  //end of logging/trading selected patterns
@@ -163,30 +166,26 @@ void OnStart()
   
 }
 //////////////////////////////////////////////////////////////////////////////////////////////strategies
+int strategy_halfhigher1_exe(int bar_no, double _ave_alphaH, double _ave_alphaL)
+{  //simulates the strategy on bar_no-1 and returns the revenue in pips
+   if( Low[bar_no-1] + High[bar_no-1] > Low[bar_no] + High[bar_no] )   //half price grows
+      return 1;
+   else 
+      return -1;
+} 
+int strategy_halfhigher2_exe(int bar_no, double _ave_alphaH, double _ave_alphaL)
+{  //simulates the strategy on bar_no-1 and returns the revenue in pips
+   if( Low[bar_no-2] + High[bar_no-2] > Low[bar_no] + High[bar_no] )   //half price in second bar grows 
+      return 1;
+   else 
+      return -1;
+} 
 int strategy_lowclose_exe(int bar_no, double _ave_alphaH, double _ave_alphaL)
 {  //simulates the strategy on bar_no-1 and returns the revenue in pips
    double buy_limit_price = price_fromalpha(High[bar_no], Low[bar_no], _ave_alphaL);
    if( Low[bar_no-1] > buy_limit_price)   //doesn't reach the buy limit
       return 0;
    double result = Close[bar_no-1]-buy_limit_price;
-   return (int)(NormalizeDouble(result,Digits)/Point);
-} 
-int strategy_lowhigh_unrealistic_exe(int bar_no, double _ave_alphaH, double _ave_alphaL)
-{  //simulates the strategy on bar_no-1 and returns the revenue in pips
-   double buy_limit_price = price_fromalpha(High[bar_no], Low[bar_no], _ave_alphaL);
-   double buy_take_profit = price_fromalpha(High[bar_no], Low[bar_no], _ave_alphaH);
-   double result;
-   if( Low[bar_no-1] > buy_limit_price)   //doesn't reach the buy limit
-      return 0;
-   if( High[bar_no-1] < buy_take_profit)  //doesn't reach to tp
-      result = Close[bar_no-1]-buy_limit_price;
-   else//tp
-      result = buy_take_profit-buy_limit_price;
-   return (int)(NormalizeDouble(result,Digits)/Point);
-} 
-int strategy_openclose_exe(int bar_no)
-{  //simulates the strategy on bar_no-1 and returns the revenue in pips
-   double result = Close[bar_no-1]-Open[bar_no-1];
    return (int)(NormalizeDouble(result,Digits)/Point);
 } 
 int strategy_openHigh_exe(int bar_no, double _ave_alphaH, double _ave_alphaL)
@@ -241,15 +240,30 @@ double array_ave(double &array[], int size)
 }
 double price_fromalpha(double refH, double refL, double alpha)
 {
-   return refL + alpha * (refH-refL);
+   return (refL+refH)/2 + alpha * (refH-refL);
 }
 double alpha(double refH, double refL, double in)
 {
+   double result;
    if(refH==refL)
-      return 99;
+   {
+      if(in>refL)
+         return _MAX_ALPHA;
+      else
+         return -_MAX_ALPHA;
+   }
    else
-      return (in-refL)/(refH-refL);
+   {
+      result = (in-(refL+refH)/2)/(refH-refL);
+      if(result>_MAX_ALPHA)
+         result = _MAX_ALPHA;
+      if(result<-_MAX_ALPHA)
+         result = -_MAX_ALPHA;
+      return result;
+   }
+   
 }
+/////////////////////////////////////////////////////////////////////////////
 void add_log(string str)
 {
    logstr+=str;
@@ -271,39 +285,6 @@ void reset_log()
 {
    logstr="";
 }
-/*void evaluating_later_bar(int &hits, int &good_hits, int _ref, int _late_bar, int _history_size)
-{  //_ref is the last bar of the reference pattern. others are to be compared with this one
-   int j;
-   hits=0;
-   good_hits=0;
-   double corrH,corrL,corrS;
-   for(j=0;j<_history_size;j++)
-   {
-      corrH = correlation_high(_ref,j,len);
-      corrL = correlation_low(_ref,j,len);
-      corrS = correlation_bar_size(_ref,j,len);
-      if(corrH+corrL+corrS>correlation_thresh)
-      {
-         hits++;
-         if(Close[_ref]<Close[_ref-_late_bar])   //uptrend hereafter
-         {
-            if(Close[j]<Close[j-_late_bar])
-               good_hits++;
-            else
-               good_hits--;
-         }
-         else
-         {  //downtrend hereafter
-            if(Close[j]>Close[j-_late_bar])
-               good_hits++;
-            else
-               good_hits++;
-         }
-               
-      }
-   }
-}
-*/
 double correlation_bar_size(int pattern1, int pattern2, int _len)
 {  //pattern1&2 are the end indexes of 2 arrays
    //sigma(x-avgx)(y-avgy)/sqrt(sigma(x-avgx)2*sigma(y-avgy)2)
