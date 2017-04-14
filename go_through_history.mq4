@@ -12,7 +12,7 @@
 input int      pattern_len=5;
 input int      back_search_len=10000;
 input int      history=20000;
-input double   correlation_thresh=3*95;
+input double   correlation_thresh=92;
 //----macros
 #define _min_hit 5
 #define _MAX_ALPHA 2.5
@@ -54,7 +54,9 @@ void OnStart()
          corrH = correlation_high(_ref,_ref+j,pattern_len);
          corrL = correlation_low(_ref,_ref+j,pattern_len);
          corrS = correlation_bar_size(_ref,_ref+j,pattern_len);
-         if(corrH+corrL+corrS>correlation_thresh)
+         if( (corrH>correlation_thresh) &&
+             (corrL>correlation_thresh) &&
+             (corrS>correlation_thresh) )
            {
             //saving alpha's for next 2 bars
             aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-1]);
@@ -145,7 +147,7 @@ void OnStart()
          //         if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
          //            || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
          if(number_of_hits>20)
-            if(stragegy_halfhigher1_noof_profits>2 *stragegy_halfhigher1_noof_losses)
+//            if(stragegy_halfhigher1_noof_profits>2 *stragegy_halfhigher1_noof_losses)
               {
                FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,
                          "alpha",ave_alphaH,ave_alphaL,
