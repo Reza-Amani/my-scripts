@@ -59,18 +59,14 @@ void OnStart()
             //saving alpha's for next 2 bars
             aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-1]);
             aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-1]);
-            aH=min(aH,2.5);
-            aL=max(aL,-2.5);
-            if(aL==99)
-               aL=-2.5;
+            aH=min(aH,_MAX_ALPHA);
+            aL=max(aL,-_MAX_ALPHA);
             alpha_H1[number_of_hits] = aH;
             alpha_L1[number_of_hits] = aL;
             aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-2]);
             aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-2]);
-            aH=min(aH,2.5);
-            aL=max(aL,-2.5);
-            if(aL==99)
-               aL=-2.5;
+            aH=min(aH,_MAX_ALPHA);
+            aL=max(aL,-_MAX_ALPHA);
             alpha_H2[number_of_hits] = aH;
             alpha_L2[number_of_hits] = aL;
             sister_bar_no[number_of_hits]=_ref+j;
@@ -276,6 +272,8 @@ double alpha(double refH,double refL,double in)
    double result;
    if(refH==refL)
      {
+      if(in==refL)
+         return 0;
       if(in>refL)
          return _MAX_ALPHA;
       else
