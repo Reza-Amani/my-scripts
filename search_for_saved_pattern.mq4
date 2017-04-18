@@ -10,12 +10,12 @@
 #property script_show_inputs
 //--- input parameters
 input int      pattern_len=5;
-input int      back_search_len=10000;
-input int      history=20000;
+input int      history=10000;
 input double   correlation_thresh=92;
 //----macros
 #define _min_hit 5
 #define _MAX_ALPHA 2.5
+#define _max_len  25
 //----globals
 double alpha_H1[100],alpha_L1[100],alpha_H2[100],alpha_L2[100];
 int sister_bar_no[100];
@@ -23,14 +23,18 @@ string logstr="";
 int no_of_hits_p0=0;
 int no_of_hits_pthresh=0;
 int no_of_output_lines=0;
+
+double patternH[_max_len];
+double patternL[_max_len];
+double patternS[_max_len];
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
 //+------------------------------------------------------------------+
 void OnStart()
   {
 //---
-   add_log("script started");
-   int outfilehandle=FileOpen("./trydata/go_through_history_"+Symbol()+EnumToString(ENUM_TIMEFRAMES(_Period))+"_"+IntegerToString(pattern_len)+"_"+IntegerToString(correlation_thresh)+".csv",FILE_WRITE|FILE_CSV,',');
+   add_log("script started on saved file");
+   int outfilehandle=FileOpen("./trydata/saved.csv",FILE_READ|FILE_CSV,',');
    if(outfilehandle<0)
      {
       Comment("file error");
@@ -44,14 +48,14 @@ void OnStart()
    int number_of_hits,no_of_b1_higher,no_of_b2_higher;
    double corrH,corrL,corrS;
    double aH,aL;
-   for(int _ref=10;_ref<history_size-back_search_len;_ref++)
+   for(;;)//int file saved data)
      {
       number_of_hits = 0;
       no_of_b1_higher=0;
       no_of_b2_higher=0;
-      for(int j=10;j<back_search_len-pattern_len;j++)
+      for(int _ref=10;_ref<history_size;_ref++)
         {
-         corrH = correlation_high(_ref,_ref+j,pattern_len);
+         corrH = correlation_array(High,_ref,High,_ref+j,pattern_len);
          corrL = correlation_low(_ref,_ref+j,pattern_len);
          corrS = correlation_bar_size(_ref,_ref+j,pattern_len);
          if( (corrH>correlation_thresh) &&
@@ -364,18 +368,18 @@ double correlation_bar_size(int pattern1,int pattern2,int _len)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double correlation_high(int pattern1,int pattern2,int _len)
-  {  //pattern1&2 are the end indexes of 2 arrays
+double correlation_array(const double &array1[],int offset1,const double &array2[],int offset2,int _len)
+  {
 //sigma(x-avgx)(y-avgy)/sqrt(sigma(x-avgx)2*sigma(y-avgy)2)
    double x,y;
    double avg1=0,avg2=0;
    int i;
    for(i=0; i<_len; i++)
      {
-      x = High[i+pattern1];
-      y = High[i+pattern2];
-      avg1 += High[i+pattern1];
-      avg2 += High[i+pattern2];
+      x = array1[i+offset1];
+      y = array2[i+offset2];
+      avg1 += x;
+      avg2 += y;
      }
    avg1 /= _len;
    avg2 /= _len;
@@ -383,8 +387,8 @@ double correlation_high(int pattern1,int pattern2,int _len)
    double x_xby_yb=0,x_xb2=0,y_yb2=0;
    for(i=0; i<_len; i++)
      {
-      x = High[i+pattern1];
-      y = High[i+pattern2];
+      x = array1[i+offset1];
+      y = array2[i+offset2];
       x_xby_yb+=(x-avg1)*(y-avg2);
       x_xb2 += (x-avg1)*(x-avg1);
       y_yb2 += (y-avg2)*(y-avg2);
@@ -396,42 +400,6 @@ double correlation_high(int pattern1,int pattern2,int _len)
    return 100*x_xby_yb/MathSqrt(x_xb2 * y_yb2);
 
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-double correlation_low(int pattern1,int pattern2,int _len)
-  {  //pattern1&2 are the end indexes of 2 arrays
-//sigma(x-avgx)(y-avgy)/sqrt(sigma(x-avgx)2*sigma(y-avgy)2)
-   double x,y;
-   double avg1=0,avg2=0;
-   int i;
-   for(i=0; i<_len; i++)
-     {
-      x = Low[i+pattern1];
-      y = Low[i+pattern2];
-      avg1 += Low[i+pattern1];
-      avg2 += Low[i+pattern2];
-     }
-   avg1 /= _len;
-   avg2 /= _len;
-
-   double x_xby_yb=0,x_xb2=0,y_yb2=0;
-   for(i=0; i<_len; i++)
-     {
-      x = Low[i+pattern1];
-      y = Low[i+pattern2];
-      x_xby_yb+=(x-avg1)*(y-avg2);
-      x_xb2 += (x-avg1)*(x-avg1);
-      y_yb2 += (y-avg2)*(y-avg2);
-     }
-
-   if(x_xb2*y_yb2==0)
-      return 0;
-
-   return 100*x_xby_yb/MathSqrt(x_xb2 * y_yb2);
-
-  }
-//general funcs
 //+------------------------------------------------------------------+
 double max(double v1,double v2=-DBL_MAX,double v3=-DBL_MAX,double v4=-DBL_MAX,double v5=-DBL_MAX,double v6=-DBL_MAX)
   {
