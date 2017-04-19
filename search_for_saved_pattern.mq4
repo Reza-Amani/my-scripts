@@ -48,48 +48,68 @@ void OnStart()
    int number_of_hits,no_of_b1_higher,no_of_b2_higher;
    double corrH,corrL,corrS;
    double aH,aL;
+   double temp_reading
    while(!FileIsEnding(in_filehandle)) 
    {
-      aH=(FileReadNumber(in_filehandle)); 
-/*            
-      number_of_hits = 0;
-      no_of_b1_higher=0;
-      no_of_b2_higher=0;
-      for(int _ref=10;_ref<history_size;_ref++)
-        {
-         corrH = correlation_array(High,_ref,High,_ref+j,pattern_len);
-         corrL = correlation_low(_ref,_ref+j,pattern_len);
-         corrS = correlation_bar_size(_ref,_ref+j,pattern_len);
-         if( (corrH>correlation_thresh) &&
-             (corrL>correlation_thresh) &&
-             (corrS>correlation_thresh) )
+      temp_reading=FileReadNumber(in_filehandle); //returns zero for non-numbers
+      if(temp_reading==1111)
+      {
+         for(int i=0;i<pattern_len;i++)
+            patternH[i]=FileReadNumber(in_filehandle);
+         for(int i=0;i<pattern_len;i++)
+            patternL[i]=FileReadNumber(in_filehandle);
+         for(int i=0;i<pattern_len;i++)
+            patternS[i]=patternH[i]-patternL[i];
+            
+            
+         number_of_hits = 0;
+         no_of_b1_higher=0;
+         no_of_b2_higher=0;
+         for(int i=10;i<history_size;i++)
            {
-            //saving alpha's for next 2 bars
-            aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-1]);
-            aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-1]);
-            aH=min(aH,_MAX_ALPHA);
-            aL=max(aL,-_MAX_ALPHA);
-            alpha_H1[number_of_hits] = aH;
-            alpha_L1[number_of_hits] = aL;
-            aH=alpha(High[_ref+j], Low[_ref+j], High[_ref+j-2]);
-            aL=alpha(High[_ref+j], Low[_ref+j], Low[_ref+j-2]);
-            aH=min(aH,_MAX_ALPHA);
-            aL=max(aL,-_MAX_ALPHA);
-            alpha_H2[number_of_hits] = aH;
-            alpha_L2[number_of_hits] = aL;
-            sister_bar_no[number_of_hits]=_ref+j;
-
-            if((High[_ref+j-1]+Low[_ref+j-1])/2>(High[_ref+j]+Low[_ref+j])/2)
-               no_of_b1_higher++;
-            if((High[_ref+j-2]+Low[_ref+j-2])/2>(High[_ref+j]+Low[_ref+j])/2)
-               no_of_b2_higher++;
-
-            //            FileWrite(outfilehandle,High[_ref],High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
-            number_of_hits++;
-            if(number_of_hits>=100)
-               break;
-           }
-        }  //end of search for sisters
+            corrH = correlation_array(patternH,0,High,i,pattern_len);
+            corrL = correlation_array(patternL,0,Low,i,pattern_len);
+            corrS = correlation_bar_size_array(patternS,i,pattern_len);
+            if( (corrH>correlation_thresh) &&
+                (corrL>correlation_thresh) &&
+                (corrS>correlation_thresh) )
+              {
+               //saving alpha's for next 2 bars
+               aH=alpha(High[i], Low[i], High[i-1]);
+               aL=alpha(High[i], Low[i], Low[i-1]);
+               aH=min(aH,_MAX_ALPHA);
+               aL=max(aL,-_MAX_ALPHA);
+               alpha_H1[number_of_hits] = aH;
+               alpha_L1[number_of_hits] = aL;
+               aH=alpha(High[i], Low[i], High[i-2]);
+               aL=alpha(High[i], Low[i], Low[i-2]);
+               aH=min(aH,_MAX_ALPHA);
+               aL=max(aL,-_MAX_ALPHA);
+               alpha_H2[number_of_hits] = aH;
+               alpha_L2[number_of_hits] = aL;
+               sister_bar_no[number_of_hits]=i;
+   
+               if((High[i-1]+Low[i-1])/2>(High[i]+Low[i])/2)
+                  no_of_b1_higher++;
+               if((High[i-2]+Low[i-2])/2>(High[i]+Low[i])/2)
+                  no_of_b2_higher++;
+   
+               //            FileWrite(outfilehandle,High[_ref],High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
+               number_of_hits++;
+               if(number_of_hits>=100)
+                  break;
+              }
+           }  //end of search for sisters
+            
+         }
+         
+         
+         
+         
+         
+         
+         
+/*            
 
       if(number_of_hits>_min_hit)
         {
@@ -336,15 +356,15 @@ void reset_log()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double correlation_bar_size(int pattern1,int pattern2,int _len)
-  {  //pattern1&2 are the end indexes of 2 arrays
+double correlation_bar_size_array(const double &array1[],int pattern2,int _len)
+  {  //pattern2 is the end indexe
 //sigma(x-avgx)(y-avgy)/sqrt(sigma(x-avgx)2*sigma(y-avgy)2)
    double x,y;
    double avg1=0,avg2=0;
    int i;
    for(i=0; i<_len; i++)
      {
-      x = High[i+pattern1]-Low[i+pattern1];
+      x = array1[i];
       y = High[i+pattern2]-Low[i+pattern2];
       avg1 += x;
       avg2 += y;
@@ -355,7 +375,7 @@ double correlation_bar_size(int pattern1,int pattern2,int _len)
    double x_xby_yb=0,x_xb2=0,y_yb2=0;
    for(i=0; i<_len; i++)
      {
-      x = High[i+pattern1]-Low[i+pattern1];
+      x = array1[i];
       y = High[i+pattern2]-Low[i+pattern2];
       x_xby_yb+=(x-avg1)*(y-avg2);
       x_xb2 += (x-avg1)*(x-avg1);
