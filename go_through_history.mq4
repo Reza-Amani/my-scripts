@@ -153,7 +153,7 @@ void OnStart()
                          "alpha",ave_alphaH,ave_alphaL,
                          "st_halfhigher1",stragegy_halfhigher1_profit_sum,stragegy_halfhigher1_noof_profits,stragegy_halfhigher1_noof_losses,strategy_halfhigher1_exe(_ref,ave_alphaH,ave_alphaL),
                          "st_halfhigher2",stragegy_halfhigher2_profit_sum,stragegy_halfhigher2_noof_profits,stragegy_halfhigher2_noof_losses,strategy_halfhigher2_exe(_ref,ave_alphaH,ave_alphaL),
-//                         "st_openHighifl",stragegy_openHighifl_profit_sum,stragegy_openHighifl_noof_profits,stragegy_openHighifl_noof_losses,strategy_openHighifl_exe(_ref,ave_alphaH,ave_alphaL),
+                         "11111",High[_ref+0],High[_ref+1],High[_ref+2],High[_ref+3],High[_ref+4],Low[_ref+0],Low[_ref+1],Low[_ref+2],Low[_ref+3],Low[_ref+4],
                          "");
                no_of_output_lines++;
               }  //end of logging/trading selected patterns

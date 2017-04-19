@@ -34,8 +34,8 @@ void OnStart()
   {
 //---
    add_log("script started on saved file");
-   int outfilehandle=FileOpen("./trydata/saved.csv",FILE_READ|FILE_CSV,',');
-   if(outfilehandle<0)
+   int in_filehandle=FileOpen("./trydata/saved.csv",FILE_READ|FILE_CSV,',');
+   if(in_filehandle<0)
      {
       Comment("file error");
       Print("Failed to open the file");
@@ -48,8 +48,10 @@ void OnStart()
    int number_of_hits,no_of_b1_higher,no_of_b2_higher;
    double corrH,corrL,corrS;
    double aH,aL;
-   for(;;)//int file saved data)
-     {
+   while(!FileIsEnding(in_filehandle)) 
+   {
+      aH=(FileReadNumber(in_filehandle)); 
+/*            
       number_of_hits = 0;
       no_of_b1_higher=0;
       no_of_b2_higher=0;
@@ -167,8 +169,9 @@ void OnStart()
       if(number_of_hits>_min_hit)
          no_of_hits_pthresh++;
       show_log_plus("Bar: ",_ref," /",history_size-back_search_len,"\r\nno_of_hits_p0 ",no_of_hits_p0,"\r\nno_of_hits_p10 ",no_of_hits_pthresh,"\r\nno_of_output_lines ",no_of_output_lines);
+   */
      }
-   FileClose(outfilehandle);
+   FileClose(in_filehandle);
    Print("Done");
 
   }
