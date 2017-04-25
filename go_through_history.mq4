@@ -147,7 +147,8 @@ void OnStart()
          //         if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
          //            || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
          if(number_of_hits>20)
-            if(stragegy_halfhigher1_noof_profits>2 *stragegy_halfhigher1_noof_losses)
+            if( (stragegy_halfhigher1_noof_profits>2 *stragegy_halfhigher1_noof_losses)
+            ||(stragegy_halfhigher1_noof_profits*2 <stragegy_halfhigher1_noof_losses) )
               {
                FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,
                          "alpha",ave_alphaH,ave_alphaL,

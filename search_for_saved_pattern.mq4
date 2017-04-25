@@ -35,7 +35,8 @@ void OnStart()
 //---
    add_log("script started on saved file");
    int in_filehandle=FileOpen("./trydata/saved.csv",FILE_READ|FILE_CSV,',');
-   if(in_filehandle<0)
+   int out_filehandle=FileOpen("./trydata/results.csv",FILE_WRITE|FILE_CSV,',');
+   if((in_filehandle<0)||(out_filehandle<0))
      {
       Comment("file error");
       Print("Failed to open the file");
@@ -48,11 +49,12 @@ void OnStart()
    int number_of_hits,no_of_b1_higher,no_of_b2_higher;
    double corrH,corrL,corrS;
    double aH,aL;
-   double temp_reading
+   double temp_reading;
    while(!FileIsEnding(in_filehandle)) 
    {
       temp_reading=FileReadNumber(in_filehandle); //returns zero for non-numbers
-      if(temp_reading==1111)
+//      if( (temp_reading<1112)&&(temp_reading>1110))
+      if(temp_reading==11111)
       {
          for(int i=0;i<pattern_len;i++)
             patternH[i]=FileReadNumber(in_filehandle);
@@ -94,12 +96,12 @@ void OnStart()
                if((High[i-2]+Low[i-2])/2>(High[i]+Low[i])/2)
                   no_of_b2_higher++;
    
-               //            FileWrite(outfilehandle,High[_ref],High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
                number_of_hits++;
                if(number_of_hits>=100)
                   break;
               }
            }  //end of search for sisters
+           FileWrite(out_filehandle,patternH[0],number_of_hits,no_of_b1_higher,no_of_b2_higher);
             
          }
          
