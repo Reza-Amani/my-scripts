@@ -45,7 +45,7 @@ void OnStart()
      }
    add_log("file ok\r\n");
 
-   int history_size=min(Bars,history);
+   int history_size=min(Bars,history)-100; // Bars seems to be limited to 65000
    int number_of_hits,no_of_b1_higher,no_of_b2_higher;
    double corrH,corrL,corrS;
    double aH,aL;
@@ -53,7 +53,6 @@ void OnStart()
    while(!FileIsEnding(in_filehandle)) 
    {
       temp_reading=FileReadNumber(in_filehandle); //returns zero for non-numbers
-//      if( (temp_reading<1112)&&(temp_reading>1110))
       if(temp_reading==11111)
       {
          for(int i=0;i<pattern_len;i++)
@@ -101,9 +100,9 @@ void OnStart()
                   break;
               }
            }  //end of search for sisters
-           FileWrite(out_filehandle,patternH[0],number_of_hits,no_of_b1_higher,no_of_b2_higher);
+           FileWrite(out_filehandle,patternH[0],number_of_hits,no_of_b1_higher,no_of_b2_higher,(int)(100*no_of_b1_higher/max(number_of_hits,1)));
            
-           show_log_plus("Hinput=",patternH[0]," Hits=",number_of_hits," %%b1higher=",100*no_of_b1_higher/number_of_hits," %%b2higher=",100*no_of_b2_higher/number_of_hits);
+           show_log_plus("Hinput=",patternH[0]," Hits=",number_of_hits," %%b1higher=",100*no_of_b1_higher/max(number_of_hits,1)," %%b2higher=",100*no_of_b2_higher/max(number_of_hits,1));
             
          }
          
