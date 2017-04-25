@@ -102,6 +102,8 @@ void OnStart()
               }
            }  //end of search for sisters
            FileWrite(out_filehandle,patternH[0],number_of_hits,no_of_b1_higher,no_of_b2_higher);
+           
+           show_log_plus("Hinput=",patternH[0]," Hits=",number_of_hits," %%b1higher=",100*no_of_b1_higher/number_of_hits," %%b2higher=",100*no_of_b2_higher/number_of_hits);
             
          }
          
@@ -347,6 +349,10 @@ void show_log_plus(int i)
 void show_log_plus(string s1,int i1,string s2,int i2,string s3,int i3,string s4,int i4,string s5,int i5)
   {
    Comment(logstr,s1,i1,s2,i2,s3,i3,s4,i4,s5,i5);
+  }
+void show_log_plus(string s1,double d1,string s2,int i2,string s3,int i3,string s4,int i4)
+  {
+   Comment(logstr,s1,d1,s2,i2,s3,i3,s4,i4);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
