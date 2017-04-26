@@ -10,8 +10,9 @@
 #property script_show_inputs
 //--- input parameters
 input int      pattern_len=5;
-input int      history=10000;
-input double   correlation_thresh=92;
+input int      history_start=40000;
+input int      history_end=20000;
+input double   correlation_thresh=93;
 //----macros
 #define _min_hit 5
 #define _MAX_ALPHA 2.5
@@ -45,7 +46,7 @@ void OnStart()
      }
    add_log("file ok\r\n");
 
-   int history_size=min(Bars,history)-100; // Bars seems to be limited to 65000
+   int history_size=min(Bars,history_start)-100; 
    int number_of_hits,no_of_b1_higher,no_of_b2_higher;
    double corrH,corrL,corrS;
    double aH,aL;
@@ -66,7 +67,7 @@ void OnStart()
          number_of_hits = 0;
          no_of_b1_higher=0;
          no_of_b2_higher=0;
-         for(int i=10;i<history_size;i++)
+         for(int i=history_end;i<history_size;i++)
            {
             corrH = correlation_array(patternH,0,High,i,pattern_len);
             corrL = correlation_array(patternL,0,Low,i,pattern_len);

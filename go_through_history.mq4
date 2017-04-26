@@ -10,9 +10,9 @@
 #property script_show_inputs
 //--- input parameters
 input int      pattern_len=5;
-input int      back_search_len=10000;
-input int      history=20000;
-input double   correlation_thresh=92;
+input int      back_search_len=20000;
+input int      history=40000;
+input double   correlation_thresh=93;
 //----macros
 #define _min_hit 5
 #define _MAX_ALPHA 2.5
