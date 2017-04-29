@@ -41,7 +41,9 @@ void OnStart()
    add_log("file ok\r\n");
 
    int history_size=min(Bars,history);
-   int number_of_hits,no_of_b1_higher,no_of_b2_higher;
+   int number_of_hits,no_of_b1_higher,no_of_b2_higher,par1,par2,par3;
+   double close1_ave_higher,close2_ave_higher,H2_ave_higher_close0;
+//   double close1_ave_higher,close2_ave_higher,H2_ave_higher_close0;
    double corrH,corrL,corrS;
    double aH,aL;
    for(int _ref=10;_ref<history_size-back_search_len;_ref++)
@@ -49,6 +51,7 @@ void OnStart()
       number_of_hits = 0;
       no_of_b1_higher=0;
       no_of_b2_higher=0;
+      par1=0;par2=0;par3=0;close1_ave_higher=0;close2_ave_higher=0;H2_ave_higher_close0=0;
       for(int j=10;j<back_search_len-pattern_len;j++)
         {
          corrH = correlation_high(_ref,_ref+j,pattern_len);
@@ -77,6 +80,13 @@ void OnStart()
                no_of_b1_higher++;
             if((High[_ref+j-2]+Low[_ref+j-2])/2>(High[_ref+j]+Low[_ref+j])/2)
                no_of_b2_higher++;
+
+            if(High[_ref+j-2]>High[_ref+j])
+               par1++;
+            if(High[_ref+j-2]>price_fromalpha(High[_ref+j],Low[_ref+j],0.5))
+               par2++;
+            if(High[_ref+j-2]>price_fromalpha(High[_ref+j],Low[_ref+j],0.5+0.5))
+               par3++;
 
             //            FileWrite(outfilehandle,High[_ref],High[_ref+j], Low[_ref+j], High[_ref+j-1],aH, Low[_ref+j-1],aL);
             number_of_hits++;
@@ -147,16 +157,20 @@ void OnStart()
          //         if( ((stragegy_openclose_profit_sum>0)&&(stragegy_openclose_noof_profits > stragegy_openclose_noof_losses))
          //            || ((stragegy_openclose_profit_sum<0)&&(stragegy_openclose_noof_profits < stragegy_openclose_noof_losses)) )
          if(number_of_hits>20)
-            if( (stragegy_halfhigher1_noof_profits>2 *stragegy_halfhigher1_noof_losses)
-            ||(stragegy_halfhigher1_noof_profits*2 <stragegy_halfhigher1_noof_losses) )
+//            if( (stragegy_halfhigher1_noof_profits>2 *stragegy_halfhigher1_noof_losses)
+//            ||(stragegy_halfhigher1_noof_profits*2 <stragegy_halfhigher1_noof_losses) )
               {
                FileWrite(outfilehandle,_ref,High[_ref],number_of_hits,
                          "alpha",ave_alphaH,ave_alphaL,
                          "st_halfhigher1",stragegy_halfhigher1_profit_sum,stragegy_halfhigher1_noof_profits,stragegy_halfhigher1_noof_losses,strategy_halfhigher1_exe(_ref,ave_alphaH,ave_alphaL),
-                         "st_halfhigher2",stragegy_halfhigher2_profit_sum,stragegy_halfhigher2_noof_profits,stragegy_halfhigher2_noof_losses,strategy_halfhigher2_exe(_ref,ave_alphaH,ave_alphaL),
+//                         "st_halfhigher2",stragegy_halfhigher2_profit_sum,stragegy_halfhigher2_noof_profits,stragegy_halfhigher2_noof_losses,strategy_halfhigher2_exe(_ref,ave_alphaH,ave_alphaL),
+                         "b1higher",(int)100*no_of_b1_higher/number_of_hits,
+                         "h2higher",(int)100*par1/number_of_hits,
+                         "h2higherp",(int)100*par2/number_of_hits,
+                         "h2highera1",(int)100*par3/number_of_hits,
                          "11111",High[_ref+0],High[_ref+1],High[_ref+2],High[_ref+3],High[_ref+4],Low[_ref+0],Low[_ref+1],Low[_ref+2],Low[_ref+3],Low[_ref+4],
                          "");
-               no_of_output_lines++;
+               no_of_output_lines++;          
               }  //end of logging/trading selected patterns
         }  //end of sisters process
       if(number_of_hits>0)
