@@ -15,9 +15,9 @@ input int      history=40000;
 input double   correlation_thresh=93;
 //----macros
 #define _min_hit 5
-#define _MAX_ALPHA 2.5
+#define _MAX_ALPHA 2.5  //here the base diff is the average of absolute value of diffs (close0-close1)
 //----globals
-double alpha_H1[100],alpha_L1[100],alpha_H2[100],alpha_L2[100];
+double alpha_C1[100],alpha_H1[100],alpha_L1[100],alpha_C2[100],alpha_H2[100],alpha_L2[100];
 int sister_bar_no[100];
 string logstr="";
 int no_of_hits_p0=0;
@@ -26,6 +26,12 @@ int no_of_output_lines=0;
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
 //+------------------------------------------------------------------+
+class MyDateClass
+  {
+public:
+   int               m_year;          // Year
+   int               m_month;         // Month
+};
 void OnStart()
   {
 //---
