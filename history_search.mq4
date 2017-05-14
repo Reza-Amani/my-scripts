@@ -11,7 +11,7 @@
 input int      pattern_len=5;
 input int      back_search_len=20000;
 input int      history=40000;
-input double   correlation_thresh=93;
+input int   correlation_thresh=93;
 
 /////////////////////////////////////////////////////////////////class
 class Pattern
@@ -132,7 +132,31 @@ void Screen::show_it(void)
 /////////////////////////////////////////////////////////////////class
 class MyMath
 {
+  public:
+   static double max(double v1,double v2=-DBL_MAX,double v3=-DBL_MAX,double v4=-DBL_MAX,double v5=-DBL_MAX,double v6=-DBL_MAX);
+   static double min(double v1,double v2=DBL_MAX,double v3=DBL_MAX,double v4=DBL_MAX,double v5=DBL_MAX,double v6=DBL_MAX);
+};
+double MyMath::max(double v1,double v2=-DBL_MAX,double v3=-DBL_MAX,double v4=-DBL_MAX,double v5=-DBL_MAX,double v6=-DBL_MAX)
+{
+   double result=v1;
+   if(v2>result)  result=v2;
+   if(v3>result)  result=v3;
+   if(v4>result)  result=v4;
+   if(v5>result)  result=v5;
+   if(v6>result)  result=v6;
+   return result;
 }
+double MyMath::min(double v1,double v2=DBL_MAX,double v3=DBL_MAX,double v4=DBL_MAX,double v5=DBL_MAX,double v6=DBL_MAX)
+{
+   double result=v1;
+   if(v2<result)  result=v2;
+   if(v3<result)  result=v3;
+   if(v4<result)  result=v4;
+   if(v5<result)  result=v5;
+   if(v6<result)  result=v6;
+   return result;
+}
+
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
 //+------------------------------------------------------------------+
@@ -149,14 +173,14 @@ void OnStart()
       return;
      }
    screen.add_L1_comment("file ok-");
-   int history_size=min(Bars,history);
+   int history_size=(int)MyMath::min(Bars,history);
    screen.add_L1_comment("CalculatingBars:"+IntegerToString(history_size)+"-");
 
    Pattern* p_pattern;
    ExamineBar* p_bar;
    for(int _ref=10;_ref<history_size-back_search_len;_ref++)
    {
-      p_pattern=new Pattern(Close[],_ref,pattern_len);
+      p_pattern=new Pattern(Close,_ref,pattern_len);
       p_bar=new ExamineBar(_ref,p_pattern);
    }
 
