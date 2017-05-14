@@ -13,12 +13,16 @@ class Pattern
   public:
    int size;
    double close[];
-   void set_close(const double &_src[],int _src_start, int _size);
    double absolute_diffs;
+   void set_close(const double &_src[],int _src_start, int _size);
+   void log_to_file(int file_handle);
   private:
    double calculate_absolute_diff();
 };
 double Pattern::calculate_absolute_diff()
+{  //TODO
+}
+void Pattern::log_to_file(int file_handle)
 {  //TODO
 }
 void Pattern::set_close(const double &_src[],int _src_start, int _size)
@@ -36,7 +40,12 @@ class examine_bar
    Pattern pattern;
    int number_of_hits,c1_higher_cnt;
    double ave_c1;
+   
+   void log_to_file(int file_handle);
 
+}
+void examine_bar::log_to_file(int file_handle)
+{  //TODO
 }
 //+------------------------------------------------------------------+
 //| Script program start function                                    |
