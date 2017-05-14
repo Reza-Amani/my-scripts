@@ -8,10 +8,10 @@
 #property version   "1.00"
 #property strict
 
-#include <MyMath.mqh>
-#include <Pattern.mqh>
-#include <ExamineBar.mqh>
-#include <Screen.mqh>
+#include <MyHeaders\MyMath.mqh>
+#include <MyHeaders\Pattern.mqh>
+#include <MyHeaders\ExamineBar.mqh>
+#include <MyHeaders\Screen.mqh>
 input int      pattern_len=5;
 input int      back_search_len=20000;
 input int      history=40000;
